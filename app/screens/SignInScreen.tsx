@@ -1,15 +1,53 @@
-import { StyleSheet, Text, TextInput, Button, View, TouchableOpacity, Image, ImageBackground } from 'react-native';
+import { StyleSheet, Text, TextInput, View, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import React, { useState } from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 
-const SignInScreen = ({navigation}: {navigation: any}) => {
+const SignInScreen = ({ navigation }: { navigation: any }) => {
   const [username, setUsername] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');  // Đổi từ phoneNumber thành password
+  const [loading, setLoading] = useState(false);  // Thêm trạng thái loading
+
+  // Hàm xử lý đăng nhập
+  const handleLogin = async () => {
+    if (username === '' || password === '') {
+      Alert.alert('Error', 'Please fill out all fields');
+      return;
+    }
+
+    setLoading(true);  // Bắt đầu loading
+
+    try {
+      const response = await fetch('https://fakestoreapi.com/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+
+      const jsonResponse = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Login successful');
+        console.log(jsonResponse);  // Log the response
+        navigation.replace('Home');  // Điều hướng đến màn hình Home nếu đăng nhập thành công
+      } else {
+        Alert.alert('Login failed', 'Invalid username or password');
+      }
+    } catch (error) {
+      console.error('Error during Login:', error);
+      Alert.alert('Error', 'Something went wrong, please try again');
+    } finally {
+      setLoading(false);  // Kết thúc loading
+    }
+  };
 
   return (
     <ImageBackground source={require('../../assets/images/Background.png')} style={styles.background}>
       <View style={styles.container}>
-        <Text style={{fontSize: 40, fontWeight: 'bold'}} >Wecome back!</Text>
+        <Text style={{ fontSize: 40, fontWeight: 'bold' }}>Welcome back!</Text>
         <Text style={styles.title}>Login to your account</Text>
         <Text style={{ marginRight: 190, fontSize: 15 }}>Username</Text>
         <TextInput
@@ -18,19 +56,17 @@ const SignInScreen = ({navigation}: {navigation: any}) => {
           value={username}
           onChangeText={setUsername}
         />
-        <Text style={{ marginRight: 170, fontSize: 15 }}>Phone Number</Text>
+        <Text style={{ marginRight: 170, fontSize: 15 }}>Password</Text>
         <TextInput
           style={styles.input}
-          placeholder="Phone Number"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="phone-pad"
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry  // Để ẩn mật khẩu
         />
         
-        <TouchableOpacity style={styles.button} onPress={() => {
-          navigation.replace('Home');
-        }}>
-            <Text style={styles.buttonText}>LogIn</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Logging In...' : 'LogIn'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.link}>
@@ -44,7 +80,7 @@ const SignInScreen = ({navigation}: {navigation: any}) => {
       </View>
     </ImageBackground>
   );
-}
+};
 
 export default SignInScreen;
 
@@ -64,7 +100,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    opacity: 0.5 ,
+    opacity: 0.5,
     marginBottom: 50,
     marginRight: 50,
   },
@@ -96,11 +132,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-  },  
+  },
   linkText: {
     color: '#CB8A58',
     marginBottom: 10,
-    textAlign: 'center', 
+    textAlign: 'center',
   },
   textWithMargin: {
     marginRight: 5,

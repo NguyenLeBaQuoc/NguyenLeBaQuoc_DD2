@@ -1,106 +1,70 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, Image, TouchableOpacity, Button, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { RootStackParamList } from '../types';  // Import đúng kiểu navigation
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import axios from 'axios';
+
+type ProductDetailScreenProp = StackNavigationProp<RootStackParamList, 'ProductDetail'>;
+type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
 
 const ProductDetail = () => {
-  const navigation = useNavigation();
-  const [size, setSize] = useState('Small');
-  const [toppings, setToppings] = useState({
-    Caramel: 0,
-    Banana: 0,
-    Chocolate: 0,
-    Strawberry: 0,
-  });
+  const navigation = useNavigation<ProductDetailScreenProp>();
+  const route = useRoute<ProductDetailRouteProp>();
 
-  const handleSizeChange = (size) => {
-    setSize(size);
-  };
+  const { productId } = route.params;  // Lấy productId từ route.params
+  const [product, setProduct] = useState<any>(null);
 
-  const handleToppingChange = (topping, action) => {
-    setToppings((prev) => ({
-      ...prev,
-      [topping]: action === 'increment' ? prev[topping] + 1 : prev[topping] > 0 ? prev[topping] - 1 : 0,
-    }));
-  };
+  useEffect(() => {
+    // Fetch dữ liệu sản phẩm từ API
+    const fetchProductDetail = async () => {
+      try {
+        const response = await axios.get(`https://fakestoreapi.com/products/${productId}`);
+        setProduct(response.data);
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+      }
+    };
 
-  const totalPrice = 4 + Object.values(toppings).reduce((acc, val) => acc + val, 0);
+    if (productId) {
+      fetchProductDetail();
+    }
+  }, [productId]);
+
+  if (!product) {
+    return <Text>Loading...</Text>;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate('Feed')}>
-        <MaterialCommunityIcons name='chevron-left-circle' size={40} style={styles.backIcon} />
+      <TouchableOpacity onPress={() => navigation.goBack()}>
+        <MaterialCommunityIcons name="chevron-left-circle" size={40} style={styles.backIcon} />
       </TouchableOpacity>
 
-      <Image
-        source={require('../../../assets/images/a1.png')}
-        style={styles.image}
-      />
-      <Text style={styles.title}>Cappuccino</Text>
+      <Image source={{ uri: product.image }} style={styles.image} />
+      <Text style={styles.title}>{product.title}</Text>
 
       <View style={styles.ratingContainer}>
-        <Text>⭐ 4.9</Text>
+        <Text>⭐ {product.rating.rate}</Text>
         <TouchableOpacity style={styles.heartButton}>
           <Text>❤️</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.sizeContainer}>
-        <Text style={styles.sectionTitle}>Coffee Size</Text>
-        <View style={styles.sizeButtons}>
-          {['Small', 'Medium', 'Large'].map((item) => (
-            <TouchableOpacity
-              key={item}
-              onPress={() => handleSizeChange(item)}
-              style={[
-                styles.sizeButton,
-                size === item && styles.selectedSizeButton,
-              ]}
-            >
-              <Text style={size === item ? styles.selectedSizeText : styles.sizeText}>
-                {item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
       <View style={styles.aboutContainer}>
         <Text style={styles.sectionTitle}>About</Text>
-        <Text style={styles.aboutText}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Id ipsum vivamus velit lorem amet.
-        </Text>
-      </View>
-
-      <View style={styles.toppingsContainer}>
-        <Text style={styles.sectionTitle}>Add Topping(1$)</Text>
-        {Object.keys(toppings).map((topping) => (
-          <View key={topping} style={styles.toppingRow}>
-            <Text>{topping}</Text>
-            <View style={styles.toppingButtons}>
-              <TouchableOpacity
-                onPress={() => handleToppingChange(topping, 'decrement')}
-                style={styles.toppingButton}
-              >
-                <Text>-</Text>
-              </TouchableOpacity>
-              <Text>{toppings[topping]}</Text>
-              <TouchableOpacity
-                onPress={() => handleToppingChange(topping, 'increment')}
-                style={styles.toppingButton}
-              >
-                <Text>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+        <Text style={styles.aboutText}>{product.description}</Text>
       </View>
 
       <View style={styles.cartContainer}>
         <TouchableOpacity style={styles.cartButton}>
-          <Text style={styles.cartButtonText} onPress={() => navigation.navigate('Cart')}>Add to Cart</Text>
+          <Text style={styles.cartButtonText} onPress={() => navigation.navigate('Cart')}>
+            Add to Cart
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.totalPrice}>{totalPrice}$</Text>
+        <Text style={styles.totalPrice}>{product.price}$</Text>
       </View>
     </ScrollView>
   );
@@ -134,54 +98,15 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: '#e0e0e0',
   },
-  sizeContainer: {
+  aboutContainer: {
     marginTop: 20,
   },
   sectionTitle: {
     fontSize: 18,
     marginBottom: 10,
   },
-  sizeButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  sizeButton: {
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-  },
-  selectedSizeButton: {
-    backgroundColor: '#8B4513',
-  },
-  sizeText: {
-    color: '#000',
-  },
-  selectedSizeText: {
-    color: '#fff',
-  },
-  aboutContainer: {
-    marginTop: 20,
-  },
   aboutText: {
     color: '#555',
-  },
-  toppingsContainer: {
-    marginTop: 20,
-  },
-  toppingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  toppingButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  toppingButton: {
-    padding: 5,
-    marginHorizontal: 5,
-    backgroundColor: '#f0f0f0',
   },
   cartContainer: {
     marginTop: 20,

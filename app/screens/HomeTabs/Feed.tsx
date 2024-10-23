@@ -4,15 +4,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const products = [
-  { id: 1, name: 'CAPPUCCINO', price: '3$', description: 'A rich and creamy coffee.', image: require('../../../assets/images/h1.png') },
-  { id: 2, name: 'LATTE MEO', price: '4$', description: 'Smooth and milky coffee.', image: require('../../../assets/images/h3.png') },
-  { id: 3, name: 'ESPRESSO', price: '2$', description: 'Strong and bold coffee.', image: require('../../../assets/images/h2.png') },
-  { id: 4, name: 'MOCHA', price: '3.5$', description: 'Chocolate and coffee blend.', image: require('../../../assets/images/h4.png') },
-  { id: 5, name: 'Profiterol', price: '3$', description: 'Delicious cream-filled pastry.', image: require('../../../assets/images/a4.png') },
-  { id: 6, name: 'ESPRESSO DIFICA', price: '2$', description: 'Strong espresso with a twist.', image: require('../../../assets/images/a3.png') },
-];
-
 const banners = [
   require('../../../assets/images/bn1.jpg'),
   require('../../../assets/images/bn2.jpg'),
@@ -23,12 +14,29 @@ const Feed = ({ navigation }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef(null);
   const bannerIndex = useRef(0);
-  
-  // State cho tìm kiếm
+
+  // State cho tìm kiếm, sản phẩm và danh mục
   const [searchQuery, setSearchQuery] = useState('');
-  // State cho thông báo
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // Thêm state cho danh mục
   const [showAlert, setShowAlert] = useState(false);
   const alertOpacity = useRef(new Animated.Value(0)).current;
+
+  // Fetch sản phẩm từ API
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products')
+      .then((res) => res.json())
+      .then((json) => setProducts(json))
+      .catch((error) => console.error('Error fetching products:', error));
+  }, []);
+
+  // Fetch danh mục từ API
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products/categories')
+      .then((res) => res.json())
+      .then((json) => setCategories(json))
+      .catch((error) => console.error('Error fetching categories:', error));
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,9 +47,9 @@ const Feed = ({ navigation }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Lọc sản phẩm dựa trên từ khóa tìm kiếm
+  // Lọc sản phẩm theo từ khóa tìm kiếm
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    product.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Hàm thêm sản phẩm vào giỏ hàng
@@ -86,8 +94,8 @@ const Feed = ({ navigation }) => {
         <TextInput 
           placeholder="Search..." 
           style={styles.searchInput} 
-          value={searchQuery} // Gán giá trị từ state
-          onChangeText={setSearchQuery} // Cập nhật giá trị khi người dùng nhập
+          value={searchQuery} 
+          onChangeText={setSearchQuery} 
         />
       </View>
 
@@ -115,7 +123,7 @@ const Feed = ({ navigation }) => {
       {/* Các nút danh mục */}
       <ScrollView horizontal style={styles.scrollView}>
         <View style={styles.categories}>
-          {['COFFEE', 'DESSERTS', 'ALCOHOL', 'ALCOHOL FREE', 'BREAKFAST'].map((category, index) => (
+          {categories.map((category, index) => (
             <View key={index} style={styles.categoryButton}>
               <MaterialCommunityIcons name={getIconName(category)} size={20} color="white" />
               <Text style={styles.categoryText}>{category}</Text>
@@ -131,23 +139,26 @@ const Feed = ({ navigation }) => {
         data={filteredProducts} // Sử dụng danh sách đã lọc
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.productCard}
-            onPress={() => navigation.navigate('Productdetail')}
-          >
-            <Image source={item.image} style={styles.productImage} />
-            <Text style={styles.productName}>{item.name}</Text>
-            {/* Mô tả sản phẩm */}
-            <Text style={styles.productDescription}>{item.description}</Text>
+  style={styles.productCard}
+  onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+>
+
+            <Image source={{ uri: item.image }} style={styles.productImage} />
+            <Text style={styles.productName}>{item.title}</Text>
             <View style={styles.ratingContainer}>
-              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-              <MaterialCommunityIcons name="star-half" size={16} color="#FFD700" />
-              <Text style={styles.ratingText}> 4.9</Text>
+              {/* Hiển thị số sao theo rating.rate */}
+              {Array.from({ length: 5 }, (_, index) => (
+                <MaterialCommunityIcons
+                  key={index}
+                  name={index < Math.floor(item.rating.rate) ? 'star' : index < item.rating.rate ? 'star-half' : 'star-outline'}
+                  size={16}
+                  color="#FFD700"
+                />
+              ))}
+              <Text style={styles.ratingText}> {item.rating.rate.toFixed(1)}</Text>
             </View>
             <View style={styles.priceContainer}>
-              <Text style={styles.productPrice}>{item.price}</Text>
+              <Text style={styles.productPrice}>${item.price}</Text>
               <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
                 <MaterialCommunityIcons name="cart" size={24} color="white" />
               </TouchableOpacity>
@@ -165,16 +176,14 @@ const Feed = ({ navigation }) => {
 // Helper function to get icon names based on category
 const getIconName = (category) => {
   switch (category) {
-    case 'COFFEE':
+    case 'coffee':
       return 'coffee';
-    case 'DESSERTS':
+    case 'desserts':
       return 'cupcake';
-    case 'ALCOHOL':
-      return 'glass-wine';
-    case 'ALCOHOL FREE':
-      return 'cup-water';
-    case 'BREAKFAST':
-      return 'food-croissant';
+    case 'jewelery':
+      return 'ring';
+    case 'electronics':
+      return 'cellphone';
     default:
       return 'coffee'; // Default icon
   }
@@ -190,20 +199,20 @@ const styles = StyleSheet.create({
   },
   alertContainer: {
     backgroundColor: '#6a1b9a',
-    padding: 15, // Tăng độ dày padding
+    padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     alignItems: 'center',
     position: 'absolute',
     top: 10,
-    left: 0, // Đặt trái bằng 0 để bắt đầu từ cạnh trái
-    right: 0, // Đặt phải bằng 0 để căn chỉnh với cạnh phải
-    zIndex: 1, // Đặt ở trên cùng
+    left: 0,
+    right: 0,
+    zIndex: 1,
   },
   alertText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 18, // Tăng kích thước font chữ
+    fontSize: 18,
   },
   bannerContainer: {
     width: '100%',
@@ -264,6 +273,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+ 
+
   categoryText: {
     color: 'white',
     marginLeft: 5,
@@ -309,9 +320,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
-    width: '100%', // Đặt chiều rộng 100% để chiếm toàn bộ không gian card
+    width: '100%',
   },
-
   productPrice: {
     fontSize: 18,
     fontWeight: 'bold',

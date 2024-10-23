@@ -1,10 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
 
 const Profile = ({ navigation }) => {
   const [isModalVisible, setModalVisible] = useState(false);
+  const [userData, setUserData] = useState(null);  // State để lưu thông tin người dùng
+
+  // Fetch dữ liệu người dùng từ API
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/users/1')
+      .then(res => res.json())
+      .then(json => {
+        setUserData(json);  // Lưu dữ liệu vào state
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error);
+      });
+  }, []);
 
   const handleLogout = () => {
     setModalVisible(false);
@@ -18,27 +31,35 @@ const Profile = ({ navigation }) => {
           source={require('../../../assets/images/path_to_avatar.png')}
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>Nguyen Le Ba Quoc</Text>
+        <Text style={styles.profileName}>
+          {/* Kết hợp firstname và lastname thành một chuỗi */}
+          {userData ? `${userData.firstname} ${userData.lastname}` : 'Loading...'}
+        </Text>
         <TouchableOpacity style={styles.editButton}>
           <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
         </TouchableOpacity>
       </View>
       <View style={styles.settingsContainer}>
         <Text style={styles.sectionTitle}>Thông tin</Text>
+
+        {/* Hiển thị số điện thoại nếu có */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="phone-in-talk-outline" size={20} color="#000" />
-          <Text style={styles.settingText}>+84 935465731</Text>
+          <Text style={styles.settingText}>{userData ? userData.phone : 'Loading...'}</Text>
           <TouchableOpacity style={styles.editButton}>
             <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
           </TouchableOpacity>
         </View>
+
+        {/* Hiển thị địa chỉ nếu có */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="map-marker-radius-outline" size={20} color="#000" />
-          <Text style={styles.settingText}>Thủ Đức, TP.HCM</Text>
+          <Text style={styles.settingText}>{userData ? userData.address.city : 'Loading...'}</Text>
           <TouchableOpacity style={styles.editButton}>
             <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
           </TouchableOpacity>
         </View>
+
         <View style={styles.setting}>
           <MaterialCommunityIcons name="cart-outline" size={20} color="#000" />
           <Text style={styles.settingText}>My Cart</Text>
@@ -47,14 +68,14 @@ const Profile = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.setting}>
-  <MaterialCommunityIcons name="truck" size={20} color="#000" />
-  <Text style={styles.settingText}>Theo dõi đơn hàng</Text>
-  <TouchableOpacity style={styles.editButton}>
-    <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
-  </TouchableOpacity>
-</View>
-
+          <MaterialCommunityIcons name="truck" size={20} color="#000" />
+          <Text style={styles.settingText}>Theo dõi đơn hàng</Text>
+          <TouchableOpacity style={styles.editButton}>
+            <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
+
       <TouchableOpacity style={styles.logoutButton} onPress={() => setModalVisible(true)}>
         <MaterialCommunityIcons name="arrow-right-box" size={20} color="#a52a2a" />
         <Text style={styles.logoutText}>Logout</Text>
