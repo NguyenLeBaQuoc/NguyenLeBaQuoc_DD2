@@ -5,14 +5,15 @@ import Modal from 'react-native-modal';
 
 const Profile = ({ navigation }) => {
   const [isModalVisible, setModalVisible] = useState(false);
-  const [userData, setUserData] = useState(null);  // State để lưu thông tin người dùng
+  const [userData, setUserData] = useState(null);
 
   // Fetch dữ liệu người dùng từ API
   useEffect(() => {
     fetch('https://fakestoreapi.com/users/1')
       .then(res => res.json())
       .then(json => {
-        setUserData(json);  // Lưu dữ liệu vào state
+        console.log(json); // Kiểm tra dữ liệu nhận được
+        setUserData(json);
       })
       .catch(error => {
         console.error('Error fetching user data:', error);
@@ -24,6 +25,15 @@ const Profile = ({ navigation }) => {
     navigation.replace('SignIn');
   };
 
+  if (!userData) {
+    return <Text>Loading...</Text>;
+  }
+
+  // Lấy thông tin người dùng từ dữ liệu
+  const { name, phone, email, address } = userData;
+  const { firstname, lastname } = name; // Lấy firstname và lastname từ đối tượng name
+  const { city, street, zipcode } = address;
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -32,8 +42,7 @@ const Profile = ({ navigation }) => {
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>
-          {/* Kết hợp firstname và lastname thành một chuỗi */}
-          {userData ? `${userData.firstname} ${userData.lastname}` : 'Loading...'}
+          {`${firstname} ${lastname}`} {/* Hiển thị fullname */}
         </Text>
         <TouchableOpacity style={styles.editButton}>
           <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
@@ -42,37 +51,34 @@ const Profile = ({ navigation }) => {
       <View style={styles.settingsContainer}>
         <Text style={styles.sectionTitle}>Thông tin</Text>
 
-        {/* Hiển thị số điện thoại nếu có */}
+        {/* Hiển thị email */}
+        <View style={styles.setting}>
+          <MaterialCommunityIcons name="email-outline" size={20} color="#000" />
+          <Text style={styles.settingText}>{email}</Text>
+        </View>
+
+        {/* Hiển thị số điện thoại */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="phone-in-talk-outline" size={20} color="#000" />
-          <Text style={styles.settingText}>{userData ? userData.phone : 'Loading...'}</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
-          </TouchableOpacity>
+          <Text style={styles.settingText}>{phone}</Text>
         </View>
 
-        {/* Hiển thị địa chỉ nếu có */}
+        {/* Hiển thị địa chỉ */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="map-marker-radius-outline" size={20} color="#000" />
-          <Text style={styles.settingText}>{userData ? userData.address.city : 'Loading...'}</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
-          </TouchableOpacity>
+          <Text style={styles.settingText}>{`${street}, ${city}, ${zipcode}`}</Text>
         </View>
 
+        {/* Giỏ hàng */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="cart-outline" size={20} color="#000" />
-          <Text style={styles.settingText}>My Cart</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
-          </TouchableOpacity>
+          <Text style={styles.settingText}>Giỏ hàng</Text>
         </View>
+
+        {/* Theo dõi đơn hàng */}
         <View style={styles.setting}>
           <MaterialCommunityIcons name="truck" size={20} color="#000" />
           <Text style={styles.settingText}>Theo dõi đơn hàng</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <MaterialCommunityIcons name="pencil-outline" size={20} color="#000" />
-          </TouchableOpacity>
         </View>
       </View>
 

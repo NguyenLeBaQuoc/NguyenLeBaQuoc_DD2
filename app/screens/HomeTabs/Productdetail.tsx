@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { RootStackParamList } from '../types';  // Import đúng kiểu navigation
+import axios from 'axios';
+
+// Định nghĩa kiểu cho RootStackParamList (cần tạo trước trong types.ts)
+import { RootStackParamList } from '../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import axios from 'axios';
 
 type ProductDetailScreenProp = StackNavigationProp<RootStackParamList, 'ProductDetail'>;
 type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
@@ -16,15 +18,21 @@ const ProductDetail = () => {
 
   const { productId } = route.params;  // Lấy productId từ route.params
   const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);  // Trạng thái loading
+  const [error, setError] = useState<string | null>(null);  // Trạng thái lỗi
 
   useEffect(() => {
     // Fetch dữ liệu sản phẩm từ API
     const fetchProductDetail = async () => {
       try {
+        setLoading(true);
         const response = await axios.get(`https://fakestoreapi.com/products/${productId}`);
         setProduct(response.data);
       } catch (error) {
+        setError('Lỗi khi tải dữ liệu sản phẩm.');
         console.error('Error fetching product details:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -33,8 +41,12 @@ const ProductDetail = () => {
     }
   }, [productId]);
 
-  if (!product) {
-    return <Text>Loading...</Text>;
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" style={styles.loading} />;
+  }
+
+  if (error) {
+    return <Text style={styles.errorText}>{error}</Text>;
   }
 
   return (
@@ -59,10 +71,8 @@ const ProductDetail = () => {
       </View>
 
       <View style={styles.cartContainer}>
-        <TouchableOpacity style={styles.cartButton}>
-          <Text style={styles.cartButtonText} onPress={() => navigation.navigate('Cart')}>
-            Add to Cart
-          </Text>
+        <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('Cart')}>
+          <Text style={styles.cartButtonText}>Add to Cart</Text>
         </TouchableOpacity>
         <Text style={styles.totalPrice}>{product.price}$</Text>
       </View>
@@ -124,6 +134,14 @@ const styles = StyleSheet.create({
   },
   totalPrice: {
     fontSize: 20,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
   },
 });
 

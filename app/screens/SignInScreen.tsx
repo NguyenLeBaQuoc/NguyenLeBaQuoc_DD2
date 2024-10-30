@@ -2,8 +2,8 @@ import { StyleSheet, Text, TextInput, View, TouchableOpacity, ImageBackground, A
 import React, { useState } from 'react';
 
 const SignInScreen = ({ navigation }: { navigation: any }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');  // Đổi từ phoneNumber thành password
+  const [username, setUsername] = useState('johnd');
+  const [password, setPassword] = useState('m38rmF$');  // Đổi từ phoneNumber thành password
   const [loading, setLoading] = useState(false);  // Thêm trạng thái loading
 
   // Hàm xử lý đăng nhập

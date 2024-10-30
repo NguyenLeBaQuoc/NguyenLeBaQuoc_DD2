@@ -26,7 +26,7 @@ const Myapp = () => {
         <Stack.Screen options={{headerShown: false}} name="SignUp" component={SignUpScreen} />
         <Stack.Screen options={{headerShown: false}} name="Forgot" component={Forgotpassword} />
         <Stack.Screen options={{headerShown: false}} name="Payment" component={Payment} />
-        <Stack.Screen options={{headerShown: false}} name="Productdetail" component={Productdetail} />
+        <Stack.Screen options={{headerShown: false}} name="ProductDetail" component={Productdetail} />
         <Stack.Screen options={{headerShown: false}} name="Map" component={Map} />
         <Stack.Screen options={{headerShown: false}} name="OrderConfirmation" component={OrderConfirmation} />
         <Stack.Screen options={{headerShown: false}} name="OrderStatusDetails" component={OrderStatusDetails} />
